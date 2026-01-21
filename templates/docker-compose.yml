@@ -1,0 +1,36 @@
+# Docker Compose configuration for local MongoDB development
+# Copy this file to your project root
+#
+# Usage:
+#   docker-compose up -d     # Start MongoDB
+#   docker-compose down      # Stop MongoDB
+#   docker-compose logs -f   # View logs
+
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:7
+    container_name: ${PROJECT_NAME:-wellnecity-app}-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      # Local development credentials - NOT for production
+      MONGO_INITDB_ROOT_USERNAME: dev
+      MONGO_INITDB_ROOT_PASSWORD: dev
+      MONGO_INITDB_DATABASE: app
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mongodb_data:
+    driver: local
+
+# Connection string for your .env file:
+# MONGODB_URI=mongodb://dev:dev@localhost:27017/app?authSource=admin

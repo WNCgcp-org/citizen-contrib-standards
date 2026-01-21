@@ -1,0 +1,68 @@
+# Dependencies
+node_modules/
+
+# Environment variables - CRITICAL: Never commit real secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Build outputs
+.next/
+out/
+dist/
+build/
+*.tsbuildinfo
+
+# Testing
+coverage/
+.nyc_output/
+
+# IDE and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Operating system
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Secrets and certificates - CRITICAL
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+
+# MongoDB local data (if not using Docker volume)
+data/db/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Debug
+.debug/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Optional: Ignore lock files if you want (usually keep these)
+# package-lock.json
+# yarn.lock
