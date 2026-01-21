@@ -142,6 +142,7 @@ Avoid these instant rejection triggers:
 
 ## Need Help?
 
-- **Slack:** `#citizen-dev-help`
+- **Teams:** `Citizen Developer Help` channel
+- **Principals:** Jonathan Rodriguez, Derrick Woolworth, Will Queen
 - **Office Hours:** Check the Engineering team calendar
-- **Documentation:** [development-standards repository](https://github.com/wellnecity/development-standards)
+- **Documentation:** [citizen-contrib-standards repository](https://github.com/WNCgcp-org/citizen-contrib-standards)

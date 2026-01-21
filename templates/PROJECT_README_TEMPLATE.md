@@ -152,4 +152,4 @@ See `.env.example` for required environment variables.
 
 ---
 
-*Built with the [Wellnecity Citizen Developer Program](https://github.com/wellnecity/development-standards)*
+*Built with the [Wellnecity Citizen Developer Program](https://github.com/WNCgcp-org/citizen-contrib-standards)*

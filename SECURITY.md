@@ -301,7 +301,8 @@ Before submitting your PR, verify:
 
 **Ask before building.** Security questions go to:
 
-- **Slack:** `#security` or `#citizen-dev-help`
+- **Teams:** `Citizen Developer Help` or `Security` channel
+- **Principals:** Jonathan Rodriguez, Derrick Woolworth, Will Queen
 - **Email:** security@wellnecity.com
 
 It's always better to ask than to build something insecure.
@@ -312,7 +313,7 @@ It's always better to ask than to build something insecure.
 
 Found a security problem in an existing application?
 
-1. **Don't post it publicly** (Slack, email threads, etc.)
+1. **Don't post it publicly** (Teams channels, email threads, etc.)
 2. **Email security@wellnecity.com** directly
 3. **Include:** What you found, how to reproduce it, potential impact
 

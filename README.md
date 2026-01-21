@@ -63,10 +63,10 @@ Before you begin, you need:
 npm install -g @anthropic-ai/claude-code
 
 # Clone the standards repository
-git clone https://github.com/wellnecity/development-standards.git
+git clone https://github.com/WNCgcp-org/citizen-contrib-standards.git
 
 # Copy the CLAUDE.md template to your home directory
-cp development-standards/templates/CLAUDE.md ~/.claude/CLAUDE.md
+cp citizen-contrib-standards/templates/CLAUDE.md ~/.claude/CLAUDE.md
 ```
 
 ### Step 2: Create Your Project Repository
@@ -80,8 +80,8 @@ git clone https://github.com/wellnecity/your-project-name.git
 cd your-project-name
 
 # Copy the project template
-cp ../development-standards/templates/PROJECT_README_TEMPLATE.md ./README.md
-cp ../development-standards/templates/CLAUDE.md ./CLAUDE.md
+cp ../citizen-contrib-standards/templates/PROJECT_README_TEMPLATE.md ./README.md
+cp ../citizen-contrib-standards/templates/CLAUDE.md ./CLAUDE.md
 ```
 
 ### Step 3: Build Your Application
@@ -140,7 +140,8 @@ Instant rejection reasons:
 
 ## Getting Help
 
-- **Slack:** `#citizen-dev-help`
+- **Teams:** `Citizen Developer Help` channel
+- **Principals:** Jonathan Rodriguez, Derrick Woolworth, Will Queen
 - **Office Hours:** Engineering holds weekly office hours (check calendar)
 - **Documentation:** This repository + linked resources
 
