@@ -4,12 +4,21 @@ You are helping build an internal application for Wellnecity. Follow these stand
 
 ## Technology Requirements
 
-### Database: MongoDB ONLY
+### Database: MongoDB ONLY with Required ORM/ODM
 
 - **ALWAYS** use MongoDB as the database
-- **ALWAYS** use Mongoose ODM for database interactions
 - **NEVER** use PostgreSQL, MySQL, SQLite, or any other database
-- **NEVER** use raw MongoDB driver—always use Mongoose
+
+**For Node.js/TypeScript projects:**
+- **ALWAYS** use **Mongoose** ODM - this is mandatory, not optional
+- **NEVER** use raw MongoDB driver (`mongodb` package) - use Mongoose instead
+- Rejection will occur if raw MongoDB driver is used without Mongoose
+
+**For Python projects:**
+- **ALWAYS** use **Pydantic** for data models - this is mandatory, not optional
+- **ALWAYS** use PyMongo or Motor with Pydantic validation
+- **NEVER** pass raw dictionaries to/from the database without Pydantic models
+- Rejection will occur if Pydantic is not used for data validation
 
 ### Local Development
 
@@ -86,22 +95,32 @@ MONGODB_URI=mongodb://dev:dev@localhost:27017/app?authSource=admin
 
 ## Language and Framework Requirements
 
-### Approved Stack
+### Approved Stack - Node.js/TypeScript
 
 - **Language:** TypeScript (strict mode required)
 - **Frontend:** React with Next.js
 - **Backend:** Next.js API routes or Express.js (TypeScript)
-- **Database:** MongoDB with Mongoose
+- **Database:** MongoDB with **Mongoose** (required)
 - **Styling:** Tailwind CSS
 - **Testing:** Vitest
 
+### Approved Stack - Python
+
+- **Language:** Python 3.11+ with type hints
+- **Backend:** FastAPI
+- **Database:** MongoDB with **Pydantic** + PyMongo/Motor (required)
+- **Testing:** pytest
+
 ### Not Approved
 
-Do NOT use: Vue, Angular, Svelte, Flask, Django, PostgreSQL, MySQL, SQLite, plain JavaScript (must use TypeScript)
+- **Databases:** PostgreSQL, MySQL, SQLite, or any non-MongoDB database
+- **Frameworks:** Vue, Angular, Svelte, Flask, Django
+- **Languages:** Plain JavaScript (must use TypeScript), Java, Go, Rust, PHP
+- **Database access:** Raw MongoDB driver without Mongoose (Node.js) or without Pydantic (Python)
 
 ## Project Structure
 
-Create this structure for all projects:
+### Node.js/TypeScript Projects
 
 ```
 project/
@@ -117,8 +136,28 @@ project/
 │   ├── components/       # React components
 │   ├── lib/
 │   │   └── db.ts         # MongoDB connection (use pattern above)
-│   ├── models/           # Mongoose schemas
+│   ├── models/           # Mongoose schemas (REQUIRED)
 │   └── types/            # TypeScript types
+└── tests/
+```
+
+### Python Projects
+
+```
+project/
+├── README.md
+├── CLAUDE.md
+├── pyproject.toml
+├── docker-compose.yml
+├── .env.example
+├── .gitignore
+├── src/
+│   └── your_project/
+│       ├── __init__.py
+│       ├── main.py
+│       ├── db.py         # MongoDB connection
+│       └── models/       # Pydantic models (REQUIRED)
+│           └── __init__.py
 └── tests/
 ```
 
@@ -145,7 +184,7 @@ Always use strict mode. Create `tsconfig.json` with:
 }
 ```
 
-## Mongoose Schema Pattern
+## Mongoose Schema Pattern (Node.js/TypeScript)
 
 Define all schemas in `src/models/`:
 
@@ -169,6 +208,85 @@ const ExampleSchema = new Schema<IExample>(
 );
 
 export const Example = mongoose.models.Example || mongoose.model<IExample>('Example', ExampleSchema);
+```
+
+## Pydantic Model Pattern (Python)
+
+Define all models in `src/your_project/models/`:
+
+```python
+# src/your_project/models/example.py
+from pydantic import BaseModel, Field, ConfigDict
+from typing import Optional
+from datetime import datetime
+from bson import ObjectId
+
+class PyObjectId(ObjectId):
+    @classmethod
+    def __get_pydantic_core_schema__(cls, _source_type, _handler):
+        from pydantic_core import core_schema
+        return core_schema.str_schema()
+
+    @classmethod
+    def validate(cls, v):
+        if not ObjectId.is_valid(v):
+            raise ValueError("Invalid ObjectId")
+        return ObjectId(v)
+
+class ExampleModel(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+        arbitrary_types_allowed=True,
+    )
+
+    id: Optional[PyObjectId] = Field(default=None, alias="_id")
+    name: str = Field(..., min_length=1, max_length=100)
+    description: str = Field(..., max_length=500)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+```
+
+### Python Database Connection Pattern
+
+```python
+# src/your_project/db.py
+import os
+from pymongo import MongoClient
+from pymongo.database import Database
+
+MONGODB_URI = os.getenv("MONGODB_URI")
+
+if not MONGODB_URI:
+    raise ValueError("Please define the MONGODB_URI environment variable")
+
+_client: MongoClient | None = None
+_db: Database | None = None
+
+def get_database() -> Database:
+    global _client, _db
+    if _db is None:
+        _client = MongoClient(MONGODB_URI)
+        _db = _client.get_default_database()
+    return _db
+```
+
+### Using Pydantic with PyMongo
+
+```python
+from db import get_database
+from models.example import ExampleModel
+from bson import ObjectId
+
+def create_example(example: ExampleModel) -> str:
+    db = get_database()
+    data = example.model_dump(by_alias=True, exclude={"id"})
+    result = db.examples.insert_one(data)
+    return str(result.inserted_id)
+
+def get_example(example_id: str) -> ExampleModel | None:
+    db = get_database()
+    doc = db.examples.find_one({"_id": ObjectId(example_id)})
+    return ExampleModel(**doc) if doc else None
 ```
 
 ## API Response Pattern
@@ -301,13 +419,15 @@ The project README must answer these four questions:
 
 Remind the user to:
 
-1. Run `npm audit` - must have 0 high/critical vulnerabilities
-2. Run `npm test` - all tests must pass
-3. Verify no secrets in code
-4. Verify `.env` is gitignored
-5. Verify README answers all 4 questions
+1. Verify no secrets in code
+2. Verify `.env` is gitignored
+3. Verify README answers all 4 questions
+4. **Node.js:** Run `npm audit` (0 high/critical vulnerabilities) and `npm test`
+5. **Python:** Run `pip-audit` or `safety check` and `pytest`
 
 ## Helpful Commands
+
+### For All Projects
 
 ```bash
 # Start local MongoDB
@@ -318,7 +438,11 @@ docker-compose down
 
 # View MongoDB logs
 docker-compose logs -f mongodb
+```
 
+### For Node.js/TypeScript Projects
+
+```bash
 # Run tests
 npm test
 
@@ -327,4 +451,17 @@ npm audit
 
 # Type check
 npx tsc --noEmit
+```
+
+### For Python Projects
+
+```bash
+# Run tests
+pytest
+
+# Check for vulnerabilities
+pip-audit
+
+# Type check
+mypy src/
 ```

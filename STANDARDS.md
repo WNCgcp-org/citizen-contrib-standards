@@ -13,15 +13,14 @@ This document defines the technical standards for all citizen-developed applicat
 
 ## Approved Technology Stack
 
-### Languages
+### Languages & Database Connectivity
 
-| Language | Approved For | Version |
-|----------|--------------|---------|
-| TypeScript | Web apps, APIs, scripts | 5.x |
-| Python | Data processing, ML, automation | 3.11+ |
-| SQL | Database queries only | N/A |
+| Language | Approved For | Version | Database ORM/ODM |
+|----------|--------------|---------|------------------|
+| TypeScript/Node.js | Web apps, APIs, scripts | Node 20+, TS 5.x | **Mongoose (required)** |
+| Python | Data processing, ML, automation | 3.11+ | **Pydantic + PyMongo/Motor** |
 
-**Not Approved:** Java, Go, Rust, PHP, Ruby, C#, shell scripts for production
+**Not Approved:** Java, Go, Rust, PHP, Ruby, C#, shell scripts for production, raw MongoDB drivers without ORM/ODM
 
 ### Frontend Frameworks
 
@@ -108,13 +107,17 @@ your-project/
 your-project/
 ├── README.md              # Required
 ├── CLAUDE.md              # Required
-├── pyproject.toml         # Required - dependencies
+├── pyproject.toml         # Required - dependencies (include pydantic, pymongo/motor)
+├── docker-compose.yml     # Required - local MongoDB setup
 ├── .env.example           # Required
 ├── .gitignore             # Required
 ├── src/
 │   └── your_project/
 │       ├── __init__.py
 │       ├── main.py
+│       ├── db.py          # Required - MongoDB connection
+│       ├── models/        # Required - Pydantic models
+│       │   └── __init__.py
 │       └── ...
 ├── tests/                 # Required
 └── docs/                  # Optional
@@ -156,14 +159,39 @@ function calculateTotal(items) {
 def calculate_total(items: list[CartItem]) -> float:
     return sum(item.price for item in items)
 
-# REQUIRED: Use dataclasses or Pydantic for data structures
-from dataclasses import dataclass
+# REQUIRED: Use Pydantic for all data models (especially database models)
+from pydantic import BaseModel, Field
+from typing import Optional
+from datetime import datetime
 
-@dataclass
-class CartItem:
+class CartItem(BaseModel):
     name: str
     price: float
-    quantity: int
+    quantity: int = Field(gt=0)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+# For MongoDB documents, use Pydantic with PyObjectId
+from bson import ObjectId
+from pydantic import ConfigDict
+
+class PyObjectId(ObjectId):
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, v, handler):
+        if not ObjectId.is_valid(v):
+            raise ValueError("Invalid ObjectId")
+        return ObjectId(v)
+
+class UserModel(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    id: Optional[PyObjectId] = Field(default=None, alias="_id")
+    email: str
+    name: str
+    department: str
 ```
 
 ### Naming Conventions
@@ -182,9 +210,16 @@ class CartItem:
 
 ## Database Standards
 
-### MongoDB Only
+### MongoDB with Mongoose (Node.js) or Pydantic (Python)
 
-All applications must use MongoDB. Use the official MongoDB Node.js driver or Mongoose ODM.
+All applications must use MongoDB with the **required** ORM/ODM:
+
+| Language | Required Stack | Raw Driver Allowed? |
+|----------|----------------|---------------------|
+| Node.js/TypeScript | **Mongoose** | No |
+| Python | **Pydantic + PyMongo/Motor** | No |
+
+**Using raw MongoDB drivers without Mongoose/Pydantic will result in rejection.**
 
 ### Local Development Setup
 
@@ -300,17 +335,75 @@ MONGODB_URI=mongodb://dev:dev@localhost:27017/app?authSource=admin
 3. Credentials are injected via Kubernetes secrets
 4. Your code works unchanged—just uses the environment variable
 
+### Python Connection Pattern (Pydantic + PyMongo)
+
+```python
+# db.py - REQUIRED pattern for Python projects
+import os
+from pymongo import MongoClient
+from pymongo.database import Database
+
+MONGODB_URI = os.getenv("MONGODB_URI")
+
+if not MONGODB_URI:
+    raise ValueError("Please define the MONGODB_URI environment variable")
+
+_client: MongoClient | None = None
+_db: Database | None = None
+
+def get_database() -> Database:
+    global _client, _db
+    if _db is None:
+        _client = MongoClient(MONGODB_URI)
+        _db = _client.get_default_database()
+    return _db
+
+def close_database():
+    global _client, _db
+    if _client:
+        _client.close()
+        _client = None
+        _db = None
+```
+
+```python
+# Using with Pydantic models
+from db import get_database
+from models.user import UserModel
+
+def create_user(user: UserModel) -> str:
+    db = get_database()
+    result = db.users.insert_one(user.model_dump(by_alias=True, exclude={"id"}))
+    return str(result.inserted_id)
+
+def get_user(user_id: str) -> UserModel | None:
+    db = get_database()
+    doc = db.users.find_one({"_id": ObjectId(user_id)})
+    return UserModel(**doc) if doc else None
+```
+
 ### What NOT to Do
 
 ```typescript
 // BAD: Hardcoded connection string
 const client = new MongoClient('mongodb://user:pass@prod-server:27017');
 
-// BAD: Using raw MongoDB driver when Mongoose would work
+// BAD: Using raw MongoDB driver without Mongoose (Node.js)
 import { MongoClient } from 'mongodb';
+const client = new MongoClient(uri);
+// This bypasses Mongoose - REJECTED
 
 // BAD: Creating indexes in application code (do it in migrations)
 await collection.createIndex({ email: 1 });
+```
+
+```python
+# BAD: Using PyMongo without Pydantic models
+def create_user(name, email):
+    db.users.insert_one({"name": name, "email": email})  # No validation!
+
+# BAD: Hardcoded connection string
+client = MongoClient('mongodb://user:pass@prod-server:27017')
 ```
 
 ---
@@ -430,7 +523,7 @@ Create `.env.example` (committed) and `.env` (gitignored):
 
 ```bash
 # .env.example - TEMPLATE ONLY, NO REAL VALUES
-DATABASE_URL=postgresql://user:password@localhost:5432/dbname
+MONGODB_URI=mongodb://dev:dev@localhost:27017/app?authSource=admin
 ANTHROPIC_API_KEY=sk-ant-xxxxx
 NEXTAUTH_SECRET=your-secret-here
 NEXTAUTH_URL=http://localhost:3000
@@ -604,23 +697,32 @@ Request increases via Engineering if needed.
 
 Engineering will verify:
 
+**General:**
 - [ ] README answers all 4 questions
 - [ ] CLAUDE.md is present and unmodified from template
 - [ ] Only approved technologies used
 - [ ] MongoDB used as database (no PostgreSQL, MySQL, SQLite)
 - [ ] docker-compose.yml present for local MongoDB
-- [ ] Mongoose ODM used (not raw MongoDB driver)
-- [ ] Database connection uses standard pattern from lib/db.ts
 - [ ] No hardcoded secrets or connection strings
 - [ ] .env.example present, .env gitignored
 - [ ] MONGODB_URI uses environment variable
 - [ ] Tests exist and pass
-- [ ] npm audit shows no high/critical vulnerabilities
-- [ ] TypeScript strict mode enabled
-- [ ] Logging uses structured logger
-- [ ] Error handling follows patterns
 - [ ] Health endpoint exists (if deployable)
 - [ ] Dockerfile present (if deployable)
+
+**Node.js/TypeScript Projects:**
+- [ ] **Mongoose ODM used** (raw MongoDB driver = rejection)
+- [ ] Database connection uses standard pattern from `lib/db.ts`
+- [ ] Models defined in `src/models/` with TypeScript interfaces
+- [ ] TypeScript strict mode enabled
+- [ ] npm audit shows no high/critical vulnerabilities
+
+**Python Projects:**
+- [ ] **Pydantic used for all data models** (no raw dicts = rejection)
+- [ ] PyMongo or Motor used with Pydantic validation
+- [ ] Database connection uses standard pattern from `db.py`
+- [ ] Type hints on all functions
+- [ ] Models defined in `src/models/` directory
 
 ---
 
