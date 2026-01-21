@@ -56,56 +56,99 @@ Before you begin, you need:
 
 ## Getting Started
 
-### Step 1: Set Up Your Environment
+### Step 1: Install Prerequisites
+
+Before you begin, install these tools:
 
 ```bash
-# Install Claude Code (if not already installed)
+# Install Docker Desktop (required for local MongoDB)
+# Download from: https://www.docker.com/products/docker-desktop/
+
+# Install Claude Code
 npm install -g @anthropic-ai/claude-code
 
-# Clone the standards repository
+# Verify installations
+claude --version
+docker --version
+```
+
+### Step 2: Clone This Standards Repository
+
+```bash
+# Clone the standards repository to your projects folder
 git clone https://github.com/WNCgcp-org/citizen-contrib-standards.git
 
-# Copy the CLAUDE.md template to your home directory
-cp citizen-contrib-standards/templates/CLAUDE.md ~/.claude/CLAUDE.md
+# Navigate into the repository
+cd citizen-contrib-standards
 ```
 
-### Step 2: Create Your Project Repository
+### Step 3: Start Claude Code and Let It Read the Standards
 
-1. Go to GitHub and create a new repository under the `wellnecity` organization
-2. Name it descriptively: `{department}-{what-it-does}` (e.g., `ops-inventory-tracker`)
-3. Clone it locally and add the required files:
+This is the key step. Start Claude Code **inside the standards repository** and ask it to help you create your project:
 
 ```bash
-git clone https://github.com/wellnecity/your-project-name.git
-cd your-project-name
+# Make sure you're in the citizen-contrib-standards directory
+cd citizen-contrib-standards
 
-# Copy the project template
-cp ../citizen-contrib-standards/templates/PROJECT_README_TEMPLATE.md ./README.md
-cp ../citizen-contrib-standards/templates/CLAUDE.md ./CLAUDE.md
-```
-
-### Step 3: Build Your Application
-
-Open Claude Code in your project directory:
-
-```bash
-cd your-project-name
+# Start Claude Code
 claude
 ```
 
-Tell Claude what you want to build. Be specific about:
+Then tell Claude:
+
+```
+I want to create a new project called [your-project-name] for [what it does].
+Please read the standards in this repository, then help me set up a new
+project repository that follows all the Wellnecity standards.
+```
+
+**Claude will:**
+1. Read STANDARDS.md, SECURITY.md, and the templates
+2. Create a new directory for your project
+3. Set up the correct project structure
+4. Copy and configure the required files (CLAUDE.md, docker-compose.yml, etc.)
+5. Initialize git and help you push to GitHub
+
+### Step 4: Build Your Application
+
+Once your project is set up, Claude will continue helping you build. Be specific about:
 - What problem you're solving
 - Who will use it
 - What data it needs to track
 
-**Claude Code will follow the standards automatically** because of the CLAUDE.md file in your project.
+Claude will automatically follow the standards because it has read them.
 
-### Step 4: Submit for Review
+### Step 5: Submit for Review
+
+When your application is ready:
 
 1. Ensure your README answers all 4 required questions
-2. Run through the PR_CHECKLIST.md
-3. Create a Pull Request to the `main` branch
-4. Tag `@wellnecity/engineering` for review
+2. Run through the [PR_CHECKLIST.md](PR_CHECKLIST.md)
+3. Push your code to GitHub under the `WNCgcp-org` organization
+4. Create a Pull Request to the `main` branch
+5. Tag `@WNCgcp-org/engineering` for review
+
+### Example Session
+
+```bash
+$ cd citizen-contrib-standards
+$ claude
+
+You: I want to create a new project called "ops-equipment-tracker" to help
+     the Operations team track equipment check-outs and returns. Please read
+     the standards in this repository and set up my project.
+
+Claude: I'll read the standards first, then set up your project...
+        [Claude reads STANDARDS.md, SECURITY.md, templates/CLAUDE.md, etc.]
+
+        I've created your project at ../ops-equipment-tracker with:
+        - MongoDB + Mongoose configuration
+        - Next.js with TypeScript
+        - docker-compose.yml for local development
+        - All required template files
+
+        Let's start Docker and begin building. What features do you need?
+```
 
 ## The 4 Required README Questions
 
