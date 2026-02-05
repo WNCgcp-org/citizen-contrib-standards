@@ -32,6 +32,26 @@ This document defines the technical standards for all citizen-developed applicat
 | Angular | Not Approved | |
 | Svelte | Not Approved | |
 
+### Styling
+
+| Tool | Status | Notes |
+|------|--------|-------|
+| Tailwind CSS | Approved | **Required** - use Wellnecity style guide configuration |
+| CSS Modules | Approved | When Tailwind isn't sufficient |
+| Styled Components | Not Approved | Use Tailwind instead |
+| Sass/SCSS | Approved | For complex theming only |
+
+**Important:** All applications must follow the **Wellnecity Style Guide** for consistent branding:
+
+- **Repository:** [WNCgcp-org/style-guide](https://github.com/WNCgcp-org/style-guide)
+- Contains: Colors, typography, component specifications, Tailwind config, CSS variables
+
+When building UI, reference the style guide for:
+- Brand colors (Purple `#58539D`, Orange `#E79E28`, etc.)
+- Application colors (App Purple `#3F3E66`, App Blue `#4B9AD5`, etc.)
+- Typography (Roboto font family, weights, sizes)
+- Component styles (buttons, inputs, tables, navigation, etc.)
+
 ### Backend Frameworks
 
 | Framework | Status | Notes |
@@ -709,6 +729,7 @@ Engineering will verify:
 - [ ] Tests exist and pass
 - [ ] Health endpoint exists (if deployable)
 - [ ] Dockerfile present (if deployable)
+- [ ] UI follows Wellnecity Style Guide (colors, typography, components)
 
 **Node.js/TypeScript Projects:**
 - [ ] **Mongoose ODM used** (raw MongoDB driver = rejection)

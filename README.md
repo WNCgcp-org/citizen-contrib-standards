@@ -186,7 +186,7 @@ Instant rejection reasons:
 - **Teams:** `Citizen Developer Help` channel
 - **Principals:** Jonathan Rodriguez, Derrick Woolworth, Will Queen
 - **Office Hours:** Engineering holds weekly office hours (check calendar)
-- **Documentation:** This repository + linked resources
+- **Documentation:** This repository + [Wellnecity Style Guide](https://github.com/WNCgcp-org/style-guide)
 
 ## Repository Contents
 
@@ -196,6 +196,12 @@ Instant rejection reasons:
 | [STANDARDS.md](STANDARDS.md) | Technical requirements and rules |
 | [SECURITY.md](SECURITY.md) | Security requirements (read this!) |
 | [PR_CHECKLIST.md](PR_CHECKLIST.md) | Checklist before submitting |
+
+### Related Repositories
+
+| Repository | Purpose |
+|------------|---------|
+| [WNCgcp-org/style-guide](https://github.com/WNCgcp-org/style-guide) | **Wellnecity Style Guide** - Colors, typography, components, CSS/Tailwind config |
 
 ### Templates (copy these to your project)
 
