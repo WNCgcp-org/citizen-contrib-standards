@@ -101,8 +101,33 @@ MONGODB_URI=mongodb://dev:dev@localhost:27017/app?authSource=admin
 - **Frontend:** React with Next.js
 - **Backend:** Next.js API routes or Express.js (TypeScript)
 - **Database:** MongoDB with **Mongoose** (required)
-- **Styling:** Tailwind CSS
+- **Styling:** Tailwind CSS with **Wellnecity Style Guide**
 - **Testing:** Vitest
+
+### Wellnecity Style Guide
+
+**IMPORTANT:** All UI must follow the Wellnecity Style Guide: https://github.com/WNCgcp-org/style-guide
+
+Use these design tokens:
+
+**Brand Colors:**
+- Primary Purple: `#58539D` (brand identity)
+- Orange: `#E79E28` (secondary accent)
+- Yellow: `#F0D56C` (tertiary accent)
+
+**Application Colors:**
+- App Purple: `#3F3E66` (headers, primary text)
+- App Blue: `#4B9AD5` (links, interactive elements)
+- App Red: `#E6464E` (errors, destructive actions)
+- App Green: `#497A3E` (success states)
+- App Body: `#303030` (body text)
+
+**Typography:**
+- Font: `'Roboto', sans-serif`
+- Weights: 300 (Light), 400 (Regular), 500 (Medium), 700 (Bold)
+- Base size: 14px
+
+**Tailwind Configuration:** See style guide for complete `tailwind.config.js` with Wellnecity colors and typography.
 
 ### Approved Stack - Python
 
